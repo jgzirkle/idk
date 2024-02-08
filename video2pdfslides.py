@@ -63,6 +63,8 @@ def detect_unique_screenshots(video_path, output_folder_screenshot_path):
     # varThreshold = Threshold on the squared Mahalanobis distance between the pixel and the model to decide whether a pixel is well described by the background model. This parameter does not affect the background update.
     # detectShadows = If true, the algorithm will detect shadows and mark them. It decreases the speed a bit, so if you do not need this feature, set the parameter to false.
 
+    # Initialize fgbg a Background object with Parameters
+    # ... (rest of the function remains unchanged)
     fgbg = cv2.createBackgroundSubtractorMOG2(history=FGBG_HISTORY, varThreshold=VAR_THRESHOLD,detectShadows=DETECT_SHADOWS)
 
     
@@ -110,7 +112,13 @@ def detect_unique_screenshots(video_path, output_folder_screenshot_path):
 
 def initialize_output_folder(video_path):
     '''Clean the output folder if already exists'''
-    output_folder_screenshot_path = f"{OUTPUT_SLIDES_DIR}/{video_path.rsplit('/')[-1].split('.')[0]}"
+    if os.path.isdir(video_path):
+        # Assuming the directory name is the base name for the output folder
+        base_name = os.path.basename(video_path)
+    else:
+        base_name = os.path.splitext(os.path.basename(video_path))[0]
+
+    output_folder_screenshot_path = f"{OUTPUT_SLIDES_DIR}/{base_name}"
 
     if os.path.exists(output_folder_screenshot_path):
         shutil.rmtree(output_folder_screenshot_path)
@@ -119,9 +127,10 @@ def initialize_output_folder(video_path):
     print('initialized output folder', output_folder_screenshot_path)
     return output_folder_screenshot_path
 
-
 def convert_screenshots_to_pdf(output_folder_screenshot_path):
-    output_pdf_path = f"{OUTPUT_SLIDES_DIR}/{video_path.rsplit('/')[-1].split('.')[0]}" + '.pdf'
+    # Extract the base name from the output folder path
+    base_name = os.path.basename(output_folder_screenshot_path)
+    output_pdf_path = f"{OUTPUT_SLIDES_DIR}/{base_name}.pdf"
     print('output_folder_screenshot_path', output_folder_screenshot_path)
     print('output_pdf_path', output_pdf_path)
     print('converting images to pdf..')
@@ -129,32 +138,35 @@ def convert_screenshots_to_pdf(output_folder_screenshot_path):
         f.write(img2pdf.convert(sorted(glob.glob(f"{output_folder_screenshot_path}/*.png"))))
     print('Pdf Created!')
     print('pdf saved at', output_pdf_path)
+    print('Pdf Created!')
+    print('pdf saved at', output_pdf_path)
 
 
 if __name__ == "__main__":
-    
-#     video_path = "./input/Test Video 2.mp4"
-#     choice = 'y'
-#     output_folder_screenshot_path = initialize_output_folder(video_path)
-    
-    
     parser = argparse.ArgumentParser("video_path")
     parser.add_argument("video_path", help="path of video to be converted to pdf slides", type=str)
+    parser.add_argument("-r", "--recursive", action='store_true', help="process all .mp4 files within the specified folder recursively")
     args = parser.parse_args()
     video_path = args.video_path
+    recursive = args.recursive
 
-    print('video_path', video_path)
-    output_folder_screenshot_path = initialize_output_folder(video_path)
-    detect_unique_screenshots(video_path, output_folder_screenshot_path)
-
-    print('Please Manually verify screenshots and delete duplicates')
-    while True:
-        choice = input("Press y to continue and n to terminate")
-        choice = choice.lower().strip()
-        if choice in ['y', 'n']:
-            break
-        else:
-            print('please enter a valid choice')
-
-    if choice == 'y':
+    if recursive:
+        # Process all .mp4 files within the specified folder recursively
+        for root, dirs, files in os.walk(video_path):
+            for file in files:
+                if file.endswith(".mp4"):
+                    video_file_path = os.path.join(root, file)
+                    # Check if a PDF file with the same base name already exists
+                    base_name = os.path.splitext(os.path.basename(video_file_path))[0]
+                    output_pdf_path = f"{OUTPUT_SLIDES_DIR}/{base_name}.pdf"
+                    if os.path.exists(output_pdf_path):
+                        print(f'PDF already exists for {base_name}, skipping screenshot detection.')
+                        continue
+                    output_folder_screenshot_path = initialize_output_folder(video_file_path)
+                    detect_unique_screenshots(video_file_path, output_folder_screenshot_path)
+                    convert_screenshots_to_pdf(output_folder_screenshot_path)
+    else:
+        # Process a single video file
+        output_folder_screenshot_path = initialize_output_folder(video_path)
+        detect_unique_screenshots(video_path, output_folder_screenshot_path)
         convert_screenshots_to_pdf(output_folder_screenshot_path)

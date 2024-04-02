@@ -110,7 +110,7 @@ def detect_unique_screenshots(video_path, output_folder_screenshot_path):
 
 def initialize_output_folder(video_path):
     '''Clean the output folder if already exists'''
-    output_folder_screenshot_path = f"{OUTPUT_SLIDES_DIR}/{video_path.rsplit('/')[-1].split('.')[0]}"
+    output_folder_screenshot_path = f"{OUTPUT_SLIDES_DIR}/{video_path.rsplit('/')[-1].rsplit('.', 1)[0]}"
 
     if os.path.exists(output_folder_screenshot_path):
         shutil.rmtree(output_folder_screenshot_path)
@@ -121,7 +121,7 @@ def initialize_output_folder(video_path):
 
 
 def convert_screenshots_to_pdf(output_folder_screenshot_path):
-    output_pdf_path = f"{OUTPUT_SLIDES_DIR}/{video_path.rsplit('/')[-1].split('.')[0]}" + '.pdf'
+    output_pdf_path = f"{OUTPUT_SLIDES_DIR}/{video_path.rsplit('/')[-1].rsplit('.', 1)[0]}" + '.pdf'
     print('output_folder_screenshot_path', output_folder_screenshot_path)
     print('output_pdf_path', output_pdf_path)
     print('converting images to pdf..')
@@ -147,14 +147,14 @@ if __name__ == "__main__":
     output_folder_screenshot_path = initialize_output_folder(video_path)
     detect_unique_screenshots(video_path, output_folder_screenshot_path)
 
-    print('Please Manually verify screenshots and delete duplicates')
-    while True:
-        choice = input("Press y to continue and n to terminate")
-        choice = choice.lower().strip()
-        if choice in ['y', 'n']:
-            break
-        else:
-            print('please enter a valid choice')
-
-    if choice == 'y':
-        convert_screenshots_to_pdf(output_folder_screenshot_path)
+#    print('Please Manually verify screenshots and delete duplicates')
+#    while True:
+#       choice = input("Press y to continue and n to terminate")
+#       choice = choice.lower().strip()
+#       if choice in ['y', 'n']:
+#            break
+#        else:
+#            print('please enter a valid choice')
+#
+#    if choice == 'y':
+     convert_screenshots_to_pdf(output_folder_screenshot_path)
